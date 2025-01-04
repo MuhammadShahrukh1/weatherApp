@@ -1,17 +1,38 @@
 let fetchCityName;
 let apiurl = 'https://api.openweathermap.org/data/2.5/weather?';
 let apiKey = 'e2cc7bbf49e2a11bae99c925b4f131ac';
+let weatherInfoDiv = document.getElementsByClassName('weatherinfo')[0];
 //when fetch city name from input field printWeather function runs
-function printWeather() {
+async function printWeather() {
     fetchCityName = document.getElementById('cityName').value;
-    if (fetchCityName.trim() !== '') {
-        fetch(`${apiurl}q=${fetchCityName}&appid=${apiKey}&units=metric`)
-            .then(data => data.json())
-            .then((res) => {
-                console.log(res);
-                displayData(res);
-                document.getElementById('cityName').value = ''
-            })
+    if (fetchCityName.trim() !== '' && fetchCityName !== undefined) {
+        let fetchUrlData = await fetch(`${apiurl}q=${fetchCityName}&appid=${apiKey}&units=metric`)
+        console.log(fetchUrlData)
+        if (fetchUrlData.ok && (fetchUrlData.statusText).toLowerCase() === 'ok') {
+            let fetchDataResult = await fetchUrlData.json();
+            console.log(fetchDataResult);
+            weatherInfoDiv.style.display = 'block'
+            displayData(fetchDataResult)
+            document.getElementById('cityName').value = ''
+        }
+        else{
+            swal.fire({
+                title: `City Name Not found`,
+                icon: `error`
+            });
+             weatherInfoDiv.style.display = 'none';
+             document.body.style.backgroundColor = 'rgb(41, 42, 41);'
+            document.body.style.backgroundImage = '';
+            document.getElementById('cityName').value = '';
+            // document.body.style.backgroundColor = 'red'
+        }
+        // .then(data => data.json())
+        // .then((res) => {
+        //     console.log(status)
+        //     console.log(res);
+        //     weatherInfoDiv.style.display = 'block'
+        //     displayData(res);
+        // })
     }
     else {
         swal.fire({
@@ -47,7 +68,11 @@ function displayData(data) {
         wind.innerHTML = `${data.wind.speed} m/s`;
         weatherImg.src = `./assests/${(data.weather[0].main).toLowerCase()}.svg`
         console.log(document.body)
-        document.getElementById('body').style.background = "url(`./assests/${(data.weather[0].main).toLowerCase()}.jpg`)";
+        // document.body.style.backgroundColor = 'red'
+        document.body.style.backgroundImage = `url(./assests/${(data.weather[0].main).toLowerCase()}.jpeg)`;
+        document.body.style.backgroundRepeat = 'no-repeat'
+        document.body.style.backgroundSize = 'cover'
+        document.body.style.backgroundPosition = 'center'
     }
 
 }
@@ -56,26 +81,36 @@ let lon;
 
 //when window load first so window take permission to access your location
 function onload() {
-     document.getElementById('container').style.display = 'none'
     window.navigator.geolocation.getCurrentPosition((data) => {
         console.log(data)
         lat = data.coords.latitude;
         lon = data.coords.longitude
-        setTimeout(()=>{
-            document.getElementById('container').style.display = 'block'
+        setTimeout(() => {
             fetchLocation(lat, lon);
-        },500)
-       
+        }, 500)
+
     })
 }
 
 function fetchLocation(lat, lon) {
-    fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`)
-        .then(data => data.json())
-        .then((res) => {
-            displayData(res)
+    if (lat === undefined && lon === undefined) {
+        printWeather()
+    }
+    else {
+        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`)
+            .then(data => data.json())
+            .then((res) => {
+                weatherInfoDiv.style.display = 'block';
+                displayData(res)
 
-        })
+            })
+    }
+    // fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`)
+    //     .then(data => data.json())
+    //     .then((res) => {
+    //         displayData(res)
+
+    //     })
 
 }
 window.onload = onload()
